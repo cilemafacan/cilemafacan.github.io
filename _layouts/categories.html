@@ -1,35 +1,87 @@
 ---
 layout: page
-# The Categories of posts.
+# All the Categories of posts
 ---
+
 {% include lang.html %}
 
-{% assign df_strftime_m = site.data.locales[lang].df.categories.strftime | default: '/ %m' %}
-{% assign df_dayjs_m = site.data.locales[lang].df.categories.dayjs | default: '/ MM' %}
+{% assign HEAD_PREFIX = 'h_' %}
+{% assign LIST_PREFIX = 'l_' %}
 
-<div id="categories" class="pl-xl-3">
-  {% assign posts = site.posts | sort: 'title' %}
-  {% for post in posts %}
-    {% assign cur_year = post.date | date: '%Y' %}
+{% assign group_index = 0 %}
 
-    {% if cur_year != last_year %}
-      {% unless forloop.first %}</ul>{% endunless %}
+{% assign sort_categories = site.categories | sort %}
 
-      <time class="year lead d-block">{{ cur_year }}</time>
-      {{ '<ul class="list-unstyled">' }}
+{% for category in sort_categories %}
+  {% assign category_name = category | first %}
+  {% assign posts_of_category = category | last %}
 
-      {% assign last_year = cur_year %}
-    {% endif %}
+  <div class="card categories">
+    <!--category -->
+    <div
+      id="{{ HEAD_PREFIX }}{{ group_index }}"
+      class="card-header d-flex justify-content-between hide-border-bottom"
+    >
+      <span class="ms-2">
+        <i class="far fa-folder{% if posts_of_category.size > 0 %}-open{% endif %}"></i>
 
-    <li>
-      {% assign ts = post.date | date: '%s' %}
-      <span class="date day" data-ts="{{ ts }}" data-df="DD">{{ post.date | date: '%d' }}</span>
-      <span class="date month small text-muted ms-1" data-ts="{{ ts }}" data-df="{{ df_dayjs_m }}">
-        {{ post.date | date: df_strftime_m }}
+        {% capture _category_url %}/categories/{{ category_name | slugify | url_encode }}/{% endcapture %}
+        <a href="{{ _category_url | relative_url }}" class="mx-2">{{ category_name }}</a>
+
+        <!-- posts count -->
+        {% assign top_posts_size = site.categories[category_name] | size %}
+        <span class="text-muted small font-weight-light">      
+          {{ top_posts_size }}
+
+          {% if top_posts_size > 1 %}
+            {{
+              site.data.locales[lang].categories.post_measure.plural
+              | default: site.data.locales[lang].categories.post_measure
+            }}
+          {% else %}
+            {{
+              site.data.locales[lang].categories.post_measure.singular
+              | default: site.data.locales[lang].categories.post_measure
+            }}
+          {% endif %}
+        </span>
       </span>
-      <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
-    </li>
 
-    {% if forloop.last %}</ul>{% endif %}
-  {% endfor %}
-</div>
+      <!-- arrow -->
+      {% if top_posts_size > 0 %}
+        <a
+          href="#{{ LIST_PREFIX }}{{ group_index }}"
+          data-bs-toggle="collapse"
+          aria-expanded="false"
+          aria-label="{{ HEAD_PREFIX }}{{ group_index }}-trigger"
+          class="category-trigger hide-border-bottom"
+        >
+          <i class="fa-solid fa-angle-down"></i>
+        </a>
+      {% else %}
+        <span data-bs-toggle="collapse" class="category-trigger hide-border-bottom disabled">
+          <i class="fa-solid fa-angle-right"></i>
+        </span>
+      {% endif %}
+    </div>
+    <!-- .card-header -->
+
+    <!-- Posts  -->
+    <div id="{{ LIST_PREFIX }}{{ group_index }}" class="collapse" aria-expanded="false">
+      <ul class="list-group">
+        {% for post in posts_of_category %}
+          <li class="list-group-item">
+            <i class="fa-regular fa-file"></i>
+            <a href="{{ post.url | relative_url }}" class="mx-2">{{ post.title }}</a>
+            <span class="text-muted small font-weight-light">
+              {% include datetime.html date=post.date wrap='span' class='text-muted small' lang=lang %}
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <!-- .card -->
+
+    {% assign group_index = group_index | plus: 1 %}
+{% endfor %}
