@@ -1,5 +1,5 @@
 ---
-title: Git Kurulumu
+title: 02-Git Kurulumu
 layout: post
 categories: [Tutorial, Git Tutorial]
 tags: [tutorial]     # TAG names should always be lowercase
